@@ -24,8 +24,9 @@ router.delete('/books/:id',validToken,isAdmin, bookControler.DeleteBookByID);
 //Router dành cho user
 router.get('/users',isAdmin, userControler.GetAllUsers);
 router.get('/users/:id',isAdmin, userControler.GetUsersById);
+router.post('/users/register/sendOTP', ValidateInput.UserRegister, userControler.UserRegister);
+router.post('/users/register/verifyOTP', userControler.UserRegisterVerify)
 router.post('/users/',isAdmin, ValidateInput.UserRegister, userControler.CreateNewUser);
-router.post('/users/register',ValidateInput.UserRegister, userControler.UserRegister);
 router.put('/users/:id',isAdmin, ValidateInput.UserRegister, userControler.UpdateUserById); 
 router.delete('/users/:id',isAdmin, userControler.DeleteUserById);
 router.post('/users/login', ValidateInput.UserLogin, userControler.UserLogin)
@@ -38,4 +39,6 @@ router.post('/borrows', validToken, isUser, ValidateInput.BorrowData, borrowCont
 router.put('/borrows/return/:idBorrow', validToken, isUser, borrowControler.returnBook);
 router.delete('/borrows/:idBorrow', validToken, isAdmin, borrowControler.DeleteBorrow)
 
+
 module.exports = router;
+

@@ -1,4 +1,8 @@
-const conectionDB = require('../config/db')
+const conectionDB = require('../config/db');
+const jwt = require('jsonwebtoken');
+let tempDb = {};
+const bcrypt = require('bcrypt');
+const sendOTPEmail = require('../untils/sendOTP')
 
 exports.GetAllUsers = async (req, res) => {
     try {
@@ -110,9 +114,8 @@ exports.DeleteUserById = async (req, res) => {
 //REGISTER npm install bcrypt
 //        const token = jwt.sign({ userId: user.ID, username: user.USERNAME }, 'your_jwt_secret_key', { expiresIn: '1h' });
 
-const bcrypt = require('bcrypt');
 exports.UserRegister = async (req, res) => {
-    let { name, email, username, password, } = req.body;
+    let { name, email, username, password } = req.body;
     try {
         let pool = await conectionDB();
         let check = await pool.request()
@@ -122,21 +125,57 @@ exports.UserRegister = async (req, res) => {
             return res.status(400).send({ message: `Username nay da duoc dang ki` });
         }
         let hashPass = await bcrypt.hash(password, 10);
-        let result = await pool.request()
-            .input('username', username)
-            .input('hashpass', hashPass)
-            .input('name', name)
-            .input('email', email)
-            .query(`INSERT INTO USERS (NAMEUSER, EMAIL, USERNAME, PASSWORD) 
-                VALUES (@name, @email, @username, @hashpass)`)
-                res.json({ message: 'Dang ki thanh cong' });
-            }
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        await sendOTPEmail.sendOTPEmail(email, otp);
+
+        tempDb = {
+            user: {
+                name,
+                email,
+                username,
+                password: hashPass
+            },
+            otpdata: otp,
+            timeValid: Date.now() + 1 * 60 * 1000
+        }
+        res.json({message: `Da gui otp den email ${email}`})
+    }
     catch (error) {
-        res.status(500).send({message: 'Khong the dang ki'})
+        console.error(error.message);
+        res.status(500).send({message: 'k the gui otp'})
     }
 }
-// login
-const jwt = require('jsonwebtoken');
+exports.UserRegisterVerify = async (req, res) => {
+    let { OTP } = req.body;
+    let user = tempDb.user;
+    let timeNow = Date.now();
+
+    if (!OTP) 
+        return res.status(500).send({ message: 'Vui long nhap OTP de xac thuc tai khoan' });
+    if (OTP != tempDb.otpdata) 
+        return res.status(500).send({ message: 'OTP khong hop le' });
+    if (timeNow > tempDb.timeValid) 
+        return res.status(400).send({ message: "OTP da het han " });
+
+    try {
+        let pool = await connectionDB();
+        
+        let result = await pool.request()
+            .input('username', user.username)
+            .input('hashpass', user.password)
+            .input('name', user.name)
+            .input('email', user.email)
+            .query(`INSERT INTO USERS (NAMEUSER, EMAIL, USERNAME, PASSWORD) 
+                VALUES (@name, @email, @username, @hashpass)`)
+        await sendOTPEmail.SuccessRegister(user.email);
+        res.json({ message: 'Dang ki thanh cong' });
+
+    } catch (error) {
+        res.status(500).send({message: 'Dang ki that bai'})
+
+    }
+}
+const connectionDB = require('../config/db');
 exports.UserLogin = async (req, res) => {
     let { username, password } = req.body;
     try {
