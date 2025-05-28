@@ -22,12 +22,14 @@ router.delete('/books',validToken, isAdmin,bookController.DeleteAllBook)
 router.delete('/books/:id',validToken,isAdmin, bookController.DeleteBookByID);
 
 //Router dành cho user
-router.get('/users',isAdmin, userController.GetAllUsers);
-router.get('/users/:id',isAdmin, userController.GetUsersById);
-router.post('/users/',isAdmin, ValidateInput.UserRegister, userController.CreateNewUser);
-router.post('/users/register',ValidateInput.UserRegister, userController.UserRegister);
-router.put('/users/:id',isAdmin, ValidateInput.UserRegister, userController.UpdateUserById); 
-router.delete('/users/:id',isAdmin, userController.DeleteUserById);
+router.get('/users', validToken, isAdmin, userController.GetAllUsers);
+router.get('/users/logout', validToken, userController.Logout);
+router.get('/users/:id', validToken, isAdmin, userController.GetUsersById);
+router.post('/users', validToken, isAdmin, ValidateInput.UserRegister, userController.CreateNewUser);
+router.post('/users/register/SendOTP',ValidateInput.UserRegister, userController.RegisterSendOTP);
+router.post('/users/register/verifyOTP', ValidateInput.VerifyOTP, userController.RegisterVerify);
+router.put('/users/:id', validToken, isAdmin, ValidateInput.UserRegister, userController.UpdateUserById); 
+router.delete('/users/:id', validToken,isAdmin, userController.DeleteUserById);
 router.post('/users/login', ValidateInput.UserLogin, userController.UserLogin)
 
 //Router dành cho borrow

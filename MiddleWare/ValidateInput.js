@@ -26,3 +26,10 @@ exports.UserRegister = (req, res, next) => {
     }
     next();
 }
+exports.VerifyOTP = (req, res, next) => {
+    const { OTP } = req.body;
+    if (!OTP) {
+        return res.status(500).send({ message: "Vui lòng nhập mã xác thực" });
+    }
+    next();
+}

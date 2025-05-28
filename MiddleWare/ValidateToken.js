@@ -1,4 +1,5 @@
 let jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 exports.verifyToken = (req, res, next) => {
     let authHeader = req.headers['authorization'];
@@ -7,13 +8,15 @@ exports.verifyToken = (req, res, next) => {
     }
 
     let token = authHeader.split(' ')[1];
-    jwt.verify(token, '0906', (err, user) => {
+    console.log(token);
+    jwt.verify(token, process.env.secretPass, (err, user) => {
         if (err) {
             return res.status(403).json({ message: 'Token hết hạn hoặc không hợp lệ' });
         }
         req.user = user; 
         next(); 
     });
+    
 };
 
 

@@ -31,14 +31,6 @@ CREATE TABLE BORROW (
     FOREIGN KEY (BOOK_ID) REFERENCES BOOKS(ID)
 );
 
-
-
--- running
--- waiting
--- openning
--- programming
-
-
 SELECT *FROM BOOKS
 SELECT *FROM USERS 
 SELECT *FROM BORROW

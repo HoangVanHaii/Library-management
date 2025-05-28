@@ -1,12 +1,12 @@
-const conectionDB = require('../config/db');
+const connectionDB = require('../config/db');
 const jwt = require('jsonwebtoken');
-let tempDb = {};
 const bcrypt = require('bcrypt');
 const sendOTPEmail = require('../untils/sendOTP')
+require('dotenv').config();
 
 exports.GetAllUsers = async (req, res) => {
     try {
-        let pool = await conectionDB();
+        let pool = await connectionDB();
         let result = await pool.request().query(`
             SELECT *FROM USERS
             `)
@@ -22,7 +22,7 @@ exports.GetAllUsers = async (req, res) => {
 exports.GetUsersById = async (req, res) => {
     try {
         let id = req.params.id;
-        let pool = await conectionDB();
+        let pool = await connectionDB();
         let result = await pool.request()
             .input('id', id)
             .query(`
@@ -41,7 +41,7 @@ exports.GetUsersById = async (req, res) => {
 exports.CreateNewUser = async (req, res) => {
     let data = req.body;
     try {
-        let pool = await conectionDB();
+        let pool = await connectionDB();
         let result = await pool.request()
             .input('username', data.NAMEUSER)
             .input('email', data.EMAIL)
@@ -59,7 +59,7 @@ exports.UpdateUserById = async (req, res) => {
     let id = req.params.id;
     let data = req.body;
     try {
-        let pool = await conectionDB();
+        let pool = await connectionDB();
         let check = await pool.request()
             .input('id', id)
             .query(`
@@ -89,7 +89,7 @@ exports.UpdateUserById = async (req, res) => {
 exports.DeleteUserById = async (req, res) => {
     let id = req.params.id;
     try {
-        let pool = await conectionDB();
+        let pool = await connectionDB();
         let check = await pool.request()
             .input('id', id)
             .query(`
@@ -111,13 +111,12 @@ exports.DeleteUserById = async (req, res) => {
     }
 }
 
-//REGISTER npm install bcrypt
-//        const token = jwt.sign({ userId: user.ID, username: user.USERNAME }, 'your_jwt_secret_key', { expiresIn: '1h' });
-
-exports.UserRegister = async (req, res) => {
+//Register
+let tempDb = {};
+exports.RegisterSendOTP = async (req, res) => {
     let { name, email, username, password } = req.body;
     try {
-        let pool = await conectionDB();
+        let pool = await connectionDB();
         let check = await pool.request()
             .input('username', username)
             .query(`SELECT * FROM USERS WHERE USERNAME = @username`);
@@ -136,16 +135,16 @@ exports.UserRegister = async (req, res) => {
                 password: hashPass
             },
             otpdata: otp,
-            timeValid: Date.now() + 1 * 60 * 1000
+            timeValid: Date.now() + 5 * 60 * 1000
         }
         res.json({message: `Da gui otp den email ${email}`})
     }
     catch (error) {
         console.error(error.message);
-        res.status(500).send({message: 'k the gui otp'})
+        res.status(500).send({message: 'Không thể gửi OTP'})
     }
 }
-exports.UserRegisterVerify = async (req, res) => {
+exports.RegisterVerify = async (req, res) => {
     let { OTP } = req.body;
     let user = tempDb.user;
     let timeNow = Date.now();
@@ -171,15 +170,18 @@ exports.UserRegisterVerify = async (req, res) => {
         res.json({ message: 'Dang ki thanh cong' });
 
     } catch (error) {
-        res.status(500).send({message: 'Dang ki that bai'})
+        console.error(error);
+        res.status(500).send({
+            message: 'Dang ki that bai',
+            data: error.message
+        })
 
     }
 }
-const connectionDB = require('../config/db');
 exports.UserLogin = async (req, res) => {
     let { username, password } = req.body;
     try {
-        let pool = await conectionDB();
+        let pool = await connectionDB();
         let result = await pool.request()
             .input('username', username)
             .query(`SELECT *FROM USERS WHERE USERNAME = @username`);
@@ -191,10 +193,20 @@ exports.UserLogin = async (req, res) => {
         if (!isPassword) {
             return res.status(400).send({ message: 'Mat khau khong hop le' });
         }
-        let token = jwt.sign({ userID: user.ID, userName: user.USERNAME, role: user.ROLE }, '0906', { expiresIn: '1h' });
+        let token = jwt.sign({ userID: user.ID, userName: user.USERNAME, role: user.ROLE }, process.env.secretPass, { expiresIn: '1h' });
         res.json({ message: `Dang nhap thanh cong với vai trò ${user.ROLE}`, token: token });
 
     } catch (error) {
+        console.error(error);
         res.status(500).send({ message: 'Khong the dang nhap' });
+    }
+}
+exports.Logout = async (req, res) => {
+    try {
+        // cần xử lí thủ công token ở client, d
+        res.json({ message: "Đăng xuất thành công" });
+        // console.log(req.user);
+    } catch (error) {
+        return res.status(400).send({ message: "Không thể đăng xuất" });
     }
 }

@@ -19,6 +19,7 @@ const connectionDB = async () => {
     }
     catch (err) {
         console.error(err.message);
+        console.log("Không thể kết nối database");
         throw err;
     }
 }
