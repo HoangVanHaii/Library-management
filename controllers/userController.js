@@ -1,7 +1,7 @@
 const connectionDB = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const sendOTPEmail = require('../untils/sendOTP')
+const sendOTPEmail = require('../utils/sendOTP')
 require('dotenv').config();
 
 exports.GetAllUsers = async (req, res) => {
