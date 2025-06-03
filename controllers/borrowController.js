@@ -62,6 +62,7 @@ exports.CreateNewBorrows = async (req, res) => {
         let updateB = await pool.request().query(`UPDATE BOOKS SET STATUS = 0 WHERE ID = ${data.BOOK_ID}`)
         res.json({ message: `Muon thanh cong sach co id = ${data.BOOK_ID}` });
     } catch (error) {
+        console.error(error.message);
         res.status(500).send({message: "Khong the Muon Sach"})
     }
 }
