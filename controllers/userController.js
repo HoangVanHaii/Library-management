@@ -102,7 +102,7 @@ exports.DeleteUserById = async (req, res) => {
         let result = await pool.request()
             .input('id', id)
             .query(`
-            DELETE USERS 
+            DELETE FROM USERS 
             WHERE ID = @id;
             `)
         res.json({ message: `Xoa thanh cong user co id = ${id}` });
@@ -180,33 +180,112 @@ exports.RegisterVerify = async (req, res) => {
 }
 exports.UserLogin = async (req, res) => {
     let { username, password } = req.body;
+    let expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); 
     try {
         let pool = await connectionDB();
+
         let result = await pool.request()
             .input('username', username)
             .query(`SELECT *FROM USERS WHERE USERNAME = @username`);
         if(result.recordset.length === 0){
             return res.status(404).send({ message: `Khong tim thay user` });
         }
+
         let user = result.recordset[0];
+
         let isPassword = await bcrypt.compare(password, user.PASSWORD);
         if (!isPassword) {
             return res.status(400).send({ message: 'Mat khau khong hop le' });
         }
-        let token = jwt.sign({ userID: user.ID, userName: user.USERNAME, role: user.ROLE }, process.env.secretPass, { expiresIn: '1h' });
-        res.json({ message: `Dang nhap thanh cong với vai trò ${user.ROLE}`, token: token });
+        let token = jwt.sign(
+            { userID: user.ID, userName: user.USERNAME, role: user.ROLE },
+            process.env.secretPass,
+            { expiresIn: '2m' }
+        );
+        let refreshToken = jwt.sign(
+            { userID: user.ID, userName: user.USERNAME, role: user.ROLE },
+            process.env.secretPass,
+            { expiresIn: '7d' }
+        );
+
+        //hash refresh token
+        let hashReftoken = await bcrypt.hash(refreshToken, 10);
+        // delete old refresh token and insert new one into the database
+        await pool.request()
+            .input('hashtoken', hashReftoken)
+            .input('user_id', user.ID)
+            .input('expiresAt', expiresAt)
+            .query(
+                `DELETE REFRESH_TOKEN WHERE USER_ID = @user_id;
+                INSERT INTO REFRESH_TOKEN(TOKEN, USER_ID, EXPIRESAT) VALUES(@hashtoken, @user_id, @expiresAt)`
+            );
+        
+        res.json({ message: `Dang nhap thanh cong với vai trò ${user.ROLE}`, token: token , refreshToken: refreshToken});
 
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: 'Khong the dang nhap' });
     }
 }
+exports.refreshToken = async (req, res) => {
+    const { refreshToken } = req.body;
+
+    try {
+        let pool = await connectionDB();
+        // Compare provided refresh token  with all tokens stored in table 
+        let check = await pool.request().query('SELECT *FROM REFRESH_TOKEN');
+        let tokenData = null;
+
+        for (let i = 0; i < check.recordset.length; i++){
+            let found = await bcrypt.compare(refreshToken, check.recordset[i].TOKEN);
+            if (found) {
+                tokenData = check.recordset[i];
+                break;
+            }
+        }
+        if (!tokenData) {
+            return res.status(404).send({ message: "Không tìm thấy refresh token" });
+        }
+        // if (check.recordset.length === 0) {
+        //     return res.status(404).send({ message: "Không tìm thấy token" });
+        // }
+        // let tokenData = check.recordset[0];
+        if (new Date(tokenData.EXPIRESAT) < new Date()) {
+            return res.status(401).send({ message: 'Refresh token đã hết hạn! Vui lòng đăng nhập lại!' });
+        }
+        let user = await pool.request().input('id', tokenData.USER_ID)
+            .query('SELECT *FROM USERS WHERE ID = @id');
+        
+        const newAccessToken = jwt.sign(
+            { user_ID: user.recordset[0].ID, userName: user.recordset[0].USERNAME, role: user.recordset[0].ROLE },
+            process.env.secretPass,
+            { expiresIn: '2m' }
+        );
+        res.json({
+            message: "Cấp lại access token thành công",
+            token: newAccessToken
+        })
+    } catch (error) {
+        console.error(error);
+        res.status(400).send({ message: 'Refresh token không hợp lệ hoặc đã hết hạn' });
+    }
+}
 exports.Logout = async (req, res) => {
     try {
-        // cần xử lí thủ công token ở client, d
-        res.json({ message: "Đăng xuất thành công" });
+        let pool = await connectionDB();
         // console.log(req.user);
+        
+        // let id = req.user.userID;
+        // console.log(id);
+        // console.log(typeof (id));
+        await pool.request().input('id' ,req.user.user_ID)
+            .query('DELETE REFRESH_TOKEN WHERE USER_ID = @id');
+       
+        // console.log("Rows affected:", logout.rowsAffected); 
+        res.json({ message: "Đăng xuất thành công" });
+
     } catch (error) {
+        console.log(error);
         return res.status(400).send({ message: "Không thể đăng xuất" });
     }
 }

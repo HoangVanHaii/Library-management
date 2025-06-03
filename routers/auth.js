@@ -9,5 +9,5 @@ router.post('/register/SendOTP',ValidateInput.UserRegister, userController.Regis
 router.post('/register/verifyOTP', ValidateInput.VerifyOTP, userController.RegisterVerify);
 router.post('/login', ValidateInput.UserLogin, userController.UserLogin)
 router.get('/logout', verifyToken.verifyToken, userController.Logout);
-
+router.post('/refreshToken', ValidateInput.refreshTokenData, userController.refreshToken);
 module.exports = router;

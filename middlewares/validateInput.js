@@ -33,3 +33,10 @@ exports.VerifyOTP = (req, res, next) => {
     }
     next();
 }
+exports.refreshTokenData = (req, res, next) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+        return res.status(500).send({ message: "Vui lòng nhập refresh token để cấp lại token mới" });
+    }
+    next();
+}

@@ -8,7 +8,6 @@ exports.verifyToken = (req, res, next) => {
     }
 
     let token = authHeader.split(' ')[1];
-    console.log(token);
     jwt.verify(token, process.env.secretPass, (err, user) => {
         if (err) {
             return res.status(403).json({ message: 'Token hết hạn hoặc không hợp lệ' });
