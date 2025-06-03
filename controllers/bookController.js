@@ -103,7 +103,7 @@ exports.DeleteAllBook = async (req, res) => {
             DELETE BOOKS 
             WHERE STATUS = 1
             `)
-        res.json({ message: "TOan bo sach chua muon da duoc xoa" });
+        res.json({ message: "Toan bo sach chua muon da duoc xoa" });
     }
     catch (e) {
         res.status(500).send({ message: `Loi ${e.message}`})
@@ -123,7 +123,7 @@ exports.getBookAvailable = async (req, res) => {
         })
         res.json(book);
     } catch (error) {
-        console.error(error); // Thêm dòng này để debug lỗi chính xác
+        console.error(error);
         res.status(500).send({message: 'Khong tim thay sach nao'})
     }
 }

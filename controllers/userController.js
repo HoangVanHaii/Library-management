@@ -42,7 +42,7 @@ exports.CreateNewUser = async (req, res) => {
     let data = req.body;
     try {
         let pool = await connectionDB();
-        let result = await pool.request()
+        await pool.request()
             .input('username', data.NAMEUSER)
             .input('email', data.EMAIL)
             .query(`
@@ -121,7 +121,7 @@ exports.RegisterSendOTP = async (req, res) => {
             .input('username', username)
             .query(`SELECT * FROM USERS WHERE USERNAME = @username`);
         if (check.recordset.length !== 0) {
-            return res.status(400).send({ message: `Username nay da duoc dang ki` });
+            return res.status(409).send({ message: `Username nay da duoc dang ki` });
         }
         let hashPass = await bcrypt.hash(password, 10);
         const otp = Math.floor(100000 + Math.random() * 900000);
@@ -150,9 +150,9 @@ exports.RegisterVerify = async (req, res) => {
     let timeNow = Date.now();
 
     if (!OTP) 
-        return res.status(500).send({ message: 'Vui long nhap OTP de xac thuc tai khoan' });
+        return res.status(400).send({ message: 'Vui long nhap OTP de xac thuc tai khoan' });
     if (OTP != tempDb.otpdata) 
-        return res.status(500).send({ message: 'OTP khong hop le' });
+        return res.status(400).send({ message: 'OTP khong hop le' });
     if (timeNow > tempDb.timeValid) 
         return res.status(400).send({ message: "OTP da het han " });
 
@@ -188,14 +188,14 @@ exports.UserLogin = async (req, res) => {
             .input('username', username)
             .query(`SELECT *FROM USERS WHERE USERNAME = @username`);
         if(result.recordset.length === 0){
-            return res.status(404).send({ message: `Khong tim thay user` });
+            return res.status(401).send({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
         }
 
         let user = result.recordset[0];
 
         let isPassword = await bcrypt.compare(password, user.PASSWORD);
         if (!isPassword) {
-            return res.status(400).send({ message: 'Mat khau khong hop le' });
+            return res.status(401).send({ message: 'Tên đăng nhập hoặc mật khẩu không đúng' });
         }
         let token = jwt.sign(
             { userID: user.ID, userName: user.USERNAME, role: user.ROLE },

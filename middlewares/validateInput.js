@@ -22,21 +22,21 @@ exports.BorrowData = (req, res, next) => {
 exports.UserRegister = (req, res, next) => {
     const { name, email, username, password } = req.body;
     if (!name || !email || !username || !password) {
-        return res.status(500).send({ message: "Thieu thong tin dang ky" });
+        return res.status(400).send({ message: "Thieu thong tin dang ky" });
     }
     next();
 }
 exports.VerifyOTP = (req, res, next) => {
     const { OTP } = req.body;
     if (!OTP) {
-        return res.status(500).send({ message: "Vui lòng nhập mã xác thực" });
+        return res.status(400).send({ message: "Vui lòng nhập mã xác thực" });
     }
     next();
 }
 exports.refreshTokenData = (req, res, next) => {
     const { refreshToken } = req.body;
     if (!refreshToken) {
-        return res.status(500).send({ message: "Vui lòng nhập refresh token để cấp lại token mới" });
+        return res.status(400).send({ message: "Vui lòng nhập refresh token để cấp lại token mới" });
     }
     next();
 }
