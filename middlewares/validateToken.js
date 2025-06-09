@@ -10,7 +10,17 @@ exports.verifyToken = (req, res, next) => {
     let token = authHeader.split(' ')[1];
     jwt.verify(token, process.env.secretPass, (err, user) => {
         if (err) {
-            return res.status(401).json({ message: 'Token hết hạn hoặc không hợp lệ' });
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    message: 'Access token đã hết hạn',
+                    errCode: 'ACCESS_TOKEN_EXPIRED'
+                });
+            } else {
+                return res.status(401).json({
+                    message: 'Access token không hợp lệ',
+                    errCode: 'INVALID_ACCESS_TOKEN'
+                });
+            }
         }
         req.user = user; 
         next(); 
