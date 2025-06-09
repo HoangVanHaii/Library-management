@@ -287,3 +287,58 @@ exports.Logout = async (req, res) => {
         return res.status(500).send({ message: "Không thể đăng xuất" });
     }
 }
+
+exports.forgetPassSendOtp = async (req, res) => {
+    const { username, email, newpassword } = req.body;
+    try {
+        let pool = await connectionDB();
+        let check = await pool.request()
+            .input('username', username)
+            .input('email', email)
+            .query('SELECT *FROM USERS WHERE USERNAME = @username AND EMAIL = @email');
+        if (check.recordset.length === 0) {
+            return res.status(404).send({
+                errCode: "invalid_user",
+                message: "Không tìm thấy người dùng"
+            });
+        }
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        await sendOTPEmail.sendOTPEmail(email, otp);
+        const hashPass = await bcrypt.hash(newpassword, 10);
+        tempDb = {
+            user: {
+                username,
+                password: hashPass
+            },
+            otpdata: otp,
+            timeValid: Date.now() + 5 * 60 *100
+        }
+
+        return res.send({ message: `Đã gửi mã OTP đến ${email}` });
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send({message: 'Không thể gửi OTP'})
+    }
+}
+exports.forgetPassVerifyOtp = async (req, res) => {
+    let { OTP } = req.body;
+    let user = tempDb.user;
+    let timeNow = Date.now();
+
+    if (!OTP) 
+        return res.status(400).send({ message: 'Vui long nhap OTP de xac thuc tai khoan' });
+    if (OTP != tempDb.otpdata) 
+        return res.status(400).send({ message: 'OTP khong hop le' });
+    if (timeNow > tempDb.timeValid) 
+        return res.status(400).send({ message: "OTP da het han " });
+    try {
+        let pool = await connectionDB();
+        await pool.request().input('username', user.username)
+            .input('password', user.password)
+            .query('UPDATE USERS SET PASSWORD = @password WHERE USERNAME = @username');
+        return res.send({message :"Đổi mật khẩu thành công"})
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({message: "Không thể đổi mật khẩu"})
+    }
+}
