@@ -51,7 +51,7 @@ exports.CreateNewBorrows = async (req, res) => {
             SELECT *FROM BOOKS WHERE ID = @BID AND STATUS = 0
             `)
             if (check.recordset.length != 0) {
-                return res.status(500).send({ message: `Sach nay da duoc muon` });
+                return res.status(409).send({ message: `Sach nay da duoc muon` });
             }
         let result = await pool.request()
             .input('UID', idUser)
