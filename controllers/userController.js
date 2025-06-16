@@ -140,7 +140,7 @@ exports.RegisterSendOTP = async (req, res) => {
         res.json({message: `Da gui otp den email ${email}`})
     }
     catch (error) {
-        console.error(error.message);
+        console.error(error);
         res.status(500).send({message: 'Không thể gửi OTP'})
     }
 }
