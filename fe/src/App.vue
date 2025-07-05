@@ -24,8 +24,8 @@ const handlelogged = async ()=>{
         <router-link to="/"><i class="fa-solid fa-house-laptop"></i> Trang chủ</router-link>
         <router-link to="/books"><i class="fa-solid fa-basket-shopping"></i> Cửa hàng </router-link>
         <router-link to="/borrows"><i class="fa-solid fa-book"></i> Thư viện </router-link>
-        <router-link to="/contacs"><i class="fa-solid fa-phone"></i> Liên hệ</router-link>
-        <router-link to="/about"><i class="fa-regular fa-address-card"></i> Giới thiệu</router-link>
+        <router-link to="/"><i class="fa-solid fa-phone"></i> Liên hệ</router-link>
+        <router-link to="/"><i class="fa-regular fa-address-card"></i> Giới thiệu</router-link>
     </nav>
     <router-view @loggedIn="handlelogged" />
     <GetBorrowPage />

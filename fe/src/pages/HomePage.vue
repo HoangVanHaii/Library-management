@@ -4,6 +4,9 @@ import Banner from '../components/Banner.vue'
 import Topic from '../components/Topic.vue'
 import BookOrderListDemo from '../components/BookOrderListDemo.vue'
 import BookBorrowListDemo from '../components/BookBorrowListDemo.vue'
+import { onMounted, onBeforeMount } from 'vue'
+
+
 </script>
 <template>
     <Banner />

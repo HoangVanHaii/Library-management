@@ -17,7 +17,6 @@ onMounted( async () => {
     // console.log(route.query.word)
     word.value = String(route.query.word || '');
     cartStore.fetchCart();
-    console.log(auth.isLoggedIn);
     document.addEventListener('click', clickOutside)
 })
 

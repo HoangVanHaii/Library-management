@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getBookFlashSale } from '../api/bookApi';
 import type { Book } from '../api/bookApi';
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { usebookStore } from '../stores/book';
 import { useRouter } from 'vue-router';
@@ -14,12 +14,10 @@ const soldMap = ref<{[key:number]:{sold:number, value:number}}>({});
 
 onMounted(async() => {
     bookStore.books = await getBookFlashSale();
-    // console.log(11111);
     for(let i = 0 ; i < bookStore.books.length; i++){
         const book = bookStore.books[i];
         const res = await getBookOrdered(book.ID);
         const sold = res || 0;
-        console.log(sold);
         let percent = Math.round((sold / (book.QUANTITY + sold)) * 100);
         if (percent <= 2 && percent > 0) {
             percent += 4;
@@ -30,7 +28,6 @@ onMounted(async() => {
         }
         soldMap.value[book.ID] = {sold: percent, value: value};
     }
-    console.log(soldMap.value);
     if (bookStore.books && bookStore.books.length > 0) {
         bookStore.updateCountDown();
         setInterval(bookStore.updateCountDown, 1000);
